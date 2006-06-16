@@ -1,4 +1,4 @@
-CHMLIB 0.37
+CHMLIB 0.38
 ===========
 
 -------
@@ -91,7 +91,8 @@ CREDITS
   re-license under the LGPL.
 
 * Sven Tantau: identification of a stack-overflow security flaw and a quick fix
-  for the problem.
+  for the problem; identification of a possible security danger in the example
+  program "extract_chmLib"
 
 * iDEFENSE Labs: identification of a nasty stack-overflow security flaw
 
@@ -113,17 +114,28 @@ CREDITS
 * Andrew Hodgetts: porting to Solaris and IRIX, as well as fixing some
   little-endian biases in the code.
 
-*  Rich Erwin: Windows CE support.
+* Rich Erwin: Windows CE support.
 
-*  Pabs: bug fixes and suggestions.
+* Pabs: bug fixes and suggestions.
 
-*  Antony Dovgal: setting up autoconf/automake based build process.
+* Antony Dovgal: setting up autoconf/automake based build process.
 
-*  Ragnar Hojland Espinosa: patches to make chm_http more useful.
+* Ragnar Hojland Espinosa: patches to make chm_http more useful.
 
-*  Razvan Cojocaru: forwarding along information regarding building on OS X.
+* Razvan Cojocaru: forwarding along information regarding building on OS X.
 
 * Julien Lemoine: creating and maintaining the Debian package of chmlib.
 
-*  Anyone else I've forgotten. (?)
+* Prarit Bhargava: Compilation on ia64
+
+* Jean-Marc Vanel: elimination of compilation warnings in extract_chmLib
+
+* Sisyphus & Matej Spiller-Muys: Compilation under MinGW32
+
+* Kyle Davenport: helper script for using chm_http with mozilla
+
+* Matthew Daniel & Mark Rosenstand: help to sort out issues with the build
+  system.
+
+* Anyone else I've forgotten. (?)
 

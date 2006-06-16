@@ -1,3 +1,13 @@
+Changes from 0.37 to 0.38
+    - Fix for reading some chm files.  Running over a large directory of chm
+      files, about 1% of them turned out to be unreadable.  This resulted from
+      an incomplete understanding of one of the header fields (index_root).
+      Apparently, this can take negative values other than -1.
+
+    - Security fix for extract_chmLib.  Pathnames containing a ".." element
+      will not be extracted.  There doesn't seem to be a legitimate reason to
+      use ".." as a path element in a chm file.
+
 Changes from 0.36 to 0.37
     - Major security fix for stack overflow vulnerability:
         http://www.sven-tantau.de/public_files/chmlib/chmlib_20051126.txt

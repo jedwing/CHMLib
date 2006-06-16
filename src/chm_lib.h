@@ -52,6 +52,9 @@ extern "C" {
 #endif
 
 #ifdef WIN32
+#ifdef __MINGW32__
+#define __int64 long long
+#endif
 typedef unsigned __int64 LONGUINT64;
 typedef __int64          LONGINT64;
 #else

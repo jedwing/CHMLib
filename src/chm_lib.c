@@ -171,7 +171,7 @@ typedef unsigned long long      UInt64;
 
 /* x86-64 */
 /* Note that these may be appropriate for other 64-bit machines. */
-#elif __x86_64__
+#elif __x86_64__ || __ia64__
 typedef unsigned char           UChar;
 typedef short                   Int16;
 typedef unsigned short          UInt16;
@@ -236,6 +236,7 @@ static int _unmarshal_uchar_array(unsigned char **pData,
     return 1;
 }
 
+#if 0
 static int _unmarshal_int16(unsigned char **pData,
                             unsigned int *pLenRemain,
                             Int16 *dest)
@@ -259,6 +260,7 @@ static int _unmarshal_uint16(unsigned char **pData,
     *pLenRemain -= 2;
     return 1;
 }
+#endif
 
 static int _unmarshal_int32(unsigned char **pData,
                             unsigned int *pLenRemain,
@@ -765,7 +767,9 @@ struct chmFile *chm_open(const char *filename)
     struct chmFile             *newHandle=NULL;
     struct chmItsfHeader        itsfHeader;
     struct chmItspHeader        itspHeader;
+#if 0
     struct chmUnitInfo          uiSpan;
+#endif
     struct chmUnitInfo          uiLzxc;
     struct chmLzxcControlData   ctlData;
 
@@ -861,7 +865,7 @@ struct chmFile *chm_open(const char *filename)
     /* if the index root is -1, this means we don't have any PMGI blocks.
      * as a result, we must use the sole PMGL block as the index root
      */
-    if (newHandle->index_root == -1)
+    if (newHandle->index_root <= -1)
         newHandle->index_root = newHandle->index_head;
 
     /* By default, compression is enabled. */

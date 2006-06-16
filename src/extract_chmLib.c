@@ -108,12 +108,19 @@ int _extract_callback(struct chmFile *h,
               struct chmUnitInfo *ui,
               void *context)
 {
-    unsigned char buffer[32768];
+    char buffer[32768];
     struct extract_context *ctx = (struct extract_context *)context;
     char *i;
 
     if (ui->path[0] != '/')
         return CHM_ENUMERATOR_CONTINUE;
+
+    /* quick hack for security hole mentioned by Sven Tantau */
+    if (strstr(ui->path, "/../") != NULL)
+    {
+        /* fprintf(stderr, "Not extracting %s (dangerous path)\n", ui->path); */
+        return CHM_ENUMERATOR_CONTINUE;
+    }
 
     if (snprintf(buffer, sizeof(buffer), "%s%s", ctx->base_path, ui->path) > 1024)
         return CHM_ENUMERATOR_FAILURE;
@@ -128,7 +135,7 @@ int _extract_callback(struct chmFile *h,
         if ((fout = fopen(buffer, "wb")) == NULL)
 	{
 	    /* make sure that it isn't just a missing directory before we abort */ 
-	    unsigned char newbuf[32768];
+	    char newbuf[32768];
 	    strcpy(newbuf, buffer);
 	    i = rindex(newbuf, '/');
 	    *i = '\0';
@@ -139,7 +146,7 @@ int _extract_callback(struct chmFile *h,
 
         while (remain != 0)
         {
-            len = chm_retrieve_object(h, ui, buffer, offset, 32768);
+            len = chm_retrieve_object(h, ui, (unsigned char *)buffer, offset, 32768);
             if (len > 0)
             {
                 fwrite(buffer, 1, (size_t)len, fout);
