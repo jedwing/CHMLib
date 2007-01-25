@@ -768,6 +768,8 @@ struct chmFile *chm_open(const char *filename)
 
     /* allocate handle */
     newHandle = (struct chmFile *)malloc(sizeof(struct chmFile));
+    if (newHandle == NULL)
+        return NULL;
     newHandle->fd = CHM_NULL_FD;
     newHandle->lzx_state = NULL;
     newHandle->cache_blocks = NULL;
@@ -1034,7 +1036,9 @@ void chm_set_param(struct chmFile *h,
 
                 /* allocate new cached blocks */
                 newBlocks = (UChar **)malloc(paramVal * sizeof (UChar *));
+                if (newBlocks == NULL) return;
                 newIndices = (UInt64 *)malloc(paramVal * sizeof (UInt64));
+                if (newIndices == NULL) { free(newBlocks); return; }
                 for (i=0; i<paramVal; i++)
                 {
                     newBlocks[i] = NULL;
@@ -1391,6 +1395,9 @@ static Int64 _chm_decompress_block(struct chmFile *h,
     UInt32 blockAlign = (UInt32)(block % h->reset_blkcount); /* reset intvl. aln. */
     UInt32 i;                                           /* local loop index  */
 
+    if (cbuffer == NULL)
+        return -1;
+
     /* let the caching system pull its weight! */
     if (block - blockAlign <= h->lzx_last_block  &&
         block              >= h->lzx_last_block)
@@ -1416,10 +1423,14 @@ static Int64 _chm_decompress_block(struct chmFile *h,
                 }
 
                 indexSlot = (int)((curBlockIdx) % h->cache_num_blocks);
-                h->cache_block_indices[indexSlot] = curBlockIdx;
                 if (! h->cache_blocks[indexSlot])
-                    h->cache_blocks[indexSlot] = (UChar *)malloc(
-                                                                 (unsigned int)(h->reset_table.block_len));
+                    h->cache_blocks[indexSlot] = (UChar *)malloc((unsigned int)(h->reset_table.block_len));
+                if (! h->cache_blocks[indexSlot])
+                {
+                    free(cbuffer);
+                    return -1;
+                }
+                h->cache_block_indices[indexSlot] = curBlockIdx;
                 lbuffer = h->cache_blocks[indexSlot];
 
                 /* decompress the previous block */
@@ -1457,10 +1468,14 @@ static Int64 _chm_decompress_block(struct chmFile *h,
 
     /* allocate slot in cache */
     indexSlot = (int)(block % h->cache_num_blocks);
-    h->cache_block_indices[indexSlot] = block;
     if (! h->cache_blocks[indexSlot])
-        h->cache_blocks[indexSlot] = (UChar *)malloc(
-                                          ((unsigned int)h->reset_table.block_len));
+        h->cache_blocks[indexSlot] = (UChar *)malloc(((unsigned int)h->reset_table.block_len));
+    if (! h->cache_blocks[indexSlot])
+    {
+        free(cbuffer);
+        return -1;
+    }
+    h->cache_block_indices[indexSlot] = block;
     lbuffer = h->cache_blocks[indexSlot];
     *ubuffer = lbuffer;
 
@@ -1622,6 +1637,9 @@ int chm_enumerate(struct chmFile *h,
     int type_bits = (what & 0x7);
     int filter_bits = (what & 0xF8);
 
+    if (page_buf == NULL)
+        return 0;
+
     /* starting page */
     curPage = h->index_head;
 
@@ -1751,6 +1769,9 @@ int chm_enumerate_dir(struct chmFile *h,
     int prefixLen;
     char lastPath[CHM_MAX_PATHLEN+1];
     int lastPathLen;
+
+    if (page_buf == NULL)
+        return 0;
 
     /* starting page */
     curPage = h->index_head;
