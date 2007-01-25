@@ -66,13 +66,6 @@
 #include <strings.h>
 #endif
 
-/* RWE 6/13/2003 */
-#ifdef _WIN32_WCE
-#define FREEBUF(x) free(x)
-#else
-#define FREEBUF(x) /* do nothing */
-#endif
-
 #ifdef WIN32
 #include <windows.h>
 #include <malloc.h>
@@ -1262,16 +1255,10 @@ int chm_resolve_object(struct chmFile *h,
     Int32 curPage;
 
     /* buffer to hold whatever page we're looking at */
-#ifdef WIN32
-#ifdef _WIN32_WCE
     /* RWE 6/12/2003 */
     UChar *page_buf = malloc(h->block_len);
-#else
-    UChar *page_buf = alloca(h->block_len);
-#endif
-#else
-    UChar page_buf[h->block_len];
-#endif
+    if (page_buf == NULL)
+        return CHM_RESOLVE_FAILURE;
 
     /* starting page */
     curPage = h->index_root;
@@ -1285,7 +1272,7 @@ int chm_resolve_object(struct chmFile *h,
                              (UInt64)h->dir_offset + (UInt64)curPage*h->block_len,
                              h->block_len) != h->block_len)
         {
-            FREEBUF(page_buf);
+            free(page_buf);
             return CHM_RESOLVE_FAILURE;
         }
 
@@ -1298,13 +1285,13 @@ int chm_resolve_object(struct chmFile *h,
                                               objPath);
             if (pEntry == NULL)
             {
-                FREEBUF(page_buf);
+                free(page_buf);
                 return CHM_RESOLVE_FAILURE;
             }
 
             /* parse entry and return */
             _chm_parse_PMGL_entry(&pEntry, ui);
-            FREEBUF(page_buf);
+            free(page_buf);
             return CHM_RESOLVE_SUCCESS;
         }
 
@@ -1315,13 +1302,13 @@ int chm_resolve_object(struct chmFile *h,
         /* else, we are confused.  give up. */
         else
         {
-            FREEBUF(page_buf);
+            free(page_buf);
             return CHM_RESOLVE_FAILURE;
         }
     }
 
     /* didn't find anything.  fail. */
-    FREEBUF(page_buf);
+    free(page_buf);
     return CHM_RESOLVE_FAILURE;
 }
 
@@ -1396,16 +1383,7 @@ static Int64 _chm_decompress_block(struct chmFile *h,
                                    UInt64 block,
                                    UChar **ubuffer)
 {
-#ifdef WIN32
-#ifdef _WIN32_WCE
-    /* RWE 6/12/2003 */
     UChar *cbuffer = malloc(((unsigned int)h->reset_table.block_len + 6144));
-#else
-    UChar *cbuffer = alloca(((unsigned int)h->reset_table.block_len + 6144));
-#endif
-#else
-    UChar cbuffer[h->reset_table.block_len + 6144];     /* compressed buffer */
-#endif
     UInt64 cmpStart;                                    /* compressed start  */
     Int64 cmpLen;                                       /* compressed len    */
     int indexSlot;                                      /* cache index slot  */
@@ -1458,7 +1436,7 @@ static Int64 _chm_decompress_block(struct chmFile *h,
 #ifdef CHM_DEBUG
                     fprintf(stderr, "   (DECOMPRESS FAILED!)\n");
 #endif
-                    FREEBUF(cbuffer);
+                    free(cbuffer);
                     return (Int64)0;
                 }
 
@@ -1498,7 +1476,7 @@ static Int64 _chm_decompress_block(struct chmFile *h,
 #ifdef CHM_DEBUG
         fprintf(stderr, "   (DECOMPRESS FAILED!)\n");
 #endif
-        FREEBUF(cbuffer);
+        free(cbuffer);
         return (Int64)0;
     }
     h->lzx_last_block = (int)block;
@@ -1506,7 +1484,7 @@ static Int64 _chm_decompress_block(struct chmFile *h,
     /* XXX: modify LZX routines to return the length of the data they
      * decompressed and return that instead, for an extra sanity check.
      */
-    FREEBUF(cbuffer);
+    free(cbuffer);
     return h->reset_table.block_len;
 }
 
@@ -1631,16 +1609,8 @@ int chm_enumerate(struct chmFile *h,
     Int32 curPage;
 
     /* buffer to hold whatever page we're looking at */
-#ifdef WIN32
-#ifdef _WIN32_WCE
     /* RWE 6/12/2003 */
     UChar *page_buf = malloc((unsigned int)h->block_len);
-#else
-    UChar *page_buf = alloca((unsigned int)h->block_len);
-#endif
-#else
-    UChar page_buf[h->block_len];
-#endif
     struct chmPmglHeader header;
     UChar *end;
     UChar *cur;
@@ -1665,7 +1635,7 @@ int chm_enumerate(struct chmFile *h,
                              (UInt64)h->dir_offset + (UInt64)curPage*h->block_len,
                              h->block_len) != h->block_len)
         {
-            FREEBUF(page_buf);
+            free(page_buf);
             return 0;
         }
 
@@ -1674,7 +1644,7 @@ int chm_enumerate(struct chmFile *h,
         lenRemain = _CHM_PMGL_LEN;
         if (! _unmarshal_pmgl_header(&cur, &lenRemain, &header))
         {
-            FREEBUF(page_buf);
+            free(page_buf);
             return 0;
         }
         end = page_buf + h->block_len - (header.free_space);
@@ -1686,7 +1656,7 @@ int chm_enumerate(struct chmFile *h,
 
             if (! _chm_parse_PMGL_entry(&cur, &ui))
             {
-                FREEBUF(page_buf);
+                free(page_buf);
                 return 0;
             }
 
@@ -1726,12 +1696,12 @@ int chm_enumerate(struct chmFile *h,
                 switch (status)
                 {
                     case CHM_ENUMERATOR_FAILURE:
-                        FREEBUF(page_buf);
+                        free(page_buf);
                         return 0;
                     case CHM_ENUMERATOR_CONTINUE:
                         break;
                     case CHM_ENUMERATOR_SUCCESS:
-                        FREEBUF(page_buf);
+                        free(page_buf);
                         return 1;
                     default:
                         break;
@@ -1743,7 +1713,7 @@ int chm_enumerate(struct chmFile *h,
         curPage = header.block_next;
     }
 
-    FREEBUF(page_buf);
+    free(page_buf);
     return 1;
 }
 
@@ -1760,16 +1730,8 @@ int chm_enumerate_dir(struct chmFile *h,
     Int32 curPage;
 
     /* buffer to hold whatever page we're looking at */
-#ifdef WIN32
-#ifdef _WIN32_WCE
     /* RWE 6/12/2003 */
     UChar *page_buf = malloc((unsigned int)h->block_len);
-#else
-    UChar *page_buf = alloca((unsigned int)h->block_len);
-#endif
-#else
-    UChar page_buf[h->block_len];
-#endif
     struct chmPmglHeader header;
     UChar *end;
     UChar *cur;
@@ -1819,7 +1781,7 @@ int chm_enumerate_dir(struct chmFile *h,
                              (UInt64)h->dir_offset + (UInt64)curPage*h->block_len,
                              h->block_len) != h->block_len)
         {
-            FREEBUF(page_buf);
+            free(page_buf);
             return 0;
         }
 
@@ -1828,7 +1790,7 @@ int chm_enumerate_dir(struct chmFile *h,
         lenRemain = _CHM_PMGL_LEN;
         if (! _unmarshal_pmgl_header(&cur, &lenRemain, &header))
         {
-            FREEBUF(page_buf);
+            free(page_buf);
             return 0;
         }
         end = page_buf + h->block_len - (header.free_space);
@@ -1840,7 +1802,7 @@ int chm_enumerate_dir(struct chmFile *h,
 
             if (! _chm_parse_PMGL_entry(&cur, &ui))
             {
-                FREEBUF(page_buf);
+                free(page_buf);
                 return 0;
             }
 
@@ -1861,7 +1823,7 @@ int chm_enumerate_dir(struct chmFile *h,
             {
                 if (strncasecmp(ui.path, prefixRectified, prefixLen) != 0)
                 {
-                    FREEBUF(page_buf);
+                    free(page_buf);
                     return 1;
                 }
             }
@@ -1912,12 +1874,12 @@ int chm_enumerate_dir(struct chmFile *h,
                 switch (status)
                 {
                     case CHM_ENUMERATOR_FAILURE:
-                        FREEBUF(page_buf);
+                        free(page_buf);
                         return 0;
                     case CHM_ENUMERATOR_CONTINUE:
                         break;
                     case CHM_ENUMERATOR_SUCCESS:
-                        FREEBUF(page_buf);
+                        free(page_buf);
                         return 1;
                     default:
                         break;
@@ -1929,6 +1891,6 @@ int chm_enumerate_dir(struct chmFile *h,
         curPage = header.block_next;
     }
 
-    FREEBUF(page_buf);
+    free(page_buf);
     return 1;
 }
