@@ -19,19 +19,13 @@
 #include "chm_lib.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #ifdef WIN32
 #include <windows.h>
 #include <direct.h>
-#include <string.h>
 #define mkdir(X, Y) _mkdir(X)
 #define snprintf _snprintf
-#define rindex strrchr
 #else
-#if __i386__
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -78,7 +72,7 @@ static int rmkdir(char *path)
      * have run out of components
      */
 
-    char *i = rindex(path, '/');
+    char *i = strrchr(path, '/');
 
     if(path[0] == '\0'  ||  dir_exists(path))
         return 0;
@@ -137,7 +131,7 @@ int _extract_callback(struct chmFile *h,
 	    /* make sure that it isn't just a missing directory before we abort */ 
 	    char newbuf[32768];
 	    strcpy(newbuf, buffer);
-	    i = rindex(newbuf, '/');
+	    i = strrchr(newbuf, '/');
 	    *i = '\0';
 	    rmkdir(newbuf);
 	    if ((fout = fopen(buffer, "wb")) == NULL)

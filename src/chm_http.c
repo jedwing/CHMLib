@@ -35,7 +35,8 @@
 #include <stdlib.h>
 #include <string.h>
 #if __sun || __sgi
-  #include <strings.h>
+#include <strings.h>
+#define strrchr rindex
 #endif
 
 /* includes for networking */
@@ -193,7 +194,7 @@ static void chmhttp_server(const char *filename)
             break;
 
         pthread_create(&tid, NULL, _slave, (void *)slave);
-        pthread_detach(&tid);
+        pthread_detach(tid);
     }
     free(slave);
 }
@@ -220,6 +221,7 @@ static void *_slave(void *param)
 
 static const char CONTENT_404[] = "HTTP/1.1 404 File not found\r\nConnection: close\r\nContent-Type: text/html; charset=iso-8859-1\r\n\r\n<html><head><title>404 File Not Found</title></head><body><h1>404 File not found</h1></body></html>\r\n";
 static const char CONTENT_500[] = "HTTP/1.1 500 Unknown thing\r\nConnection: close\r\nContent-Type: text/html; charset=iso-8859-1\r\n\r\n<html><head><title>500 Unknown thing</title></head><body><h1>500 Unknown thing</h1></body></html>\r\n";
+static const char INTERNAL_ERROR[] = "HTTP/1.1 500 Internal error\r\nConnection: close\r\nContent-Type: text/html; charset=iso-8859-1\r\n\r\n<html><head><title>500 Unknown thing</title></head><body><h1>500 Server error</h1></body></html>\r\n";
 
 struct mime_mapping
 {
@@ -308,7 +310,7 @@ static void deliver_content(FILE *fout, const char *filename, struct chmFile *fi
     }
 
     /* send the file back */
-    ext = rindex(filename, '.');
+    ext = strrchr(filename, '.');
     fprintf(fout, "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: %d\r\nContent-Type: %s\r\n\r\n",
             (int)ui.length,
             lookup_mime(ext));
@@ -335,6 +337,13 @@ static void service_request(int fd, struct chmFile *file)
     char buffer2[4096];
     char *end;
     FILE *fout = fdopen(fd, "w+b");
+    if (fout == NULL)
+    {
+        perror("chm_http: failed to fdopen client stream");
+        write(fd, INTERNAL_ERROR, strlen(INTERNAL_ERROR));
+        close(fd);
+        return;
+    }
 
     fgets(buffer, 4096, fout);
     while (1)
@@ -344,7 +353,7 @@ static void service_request(int fd, struct chmFile *file)
         if (buffer2[0] == '\r' || buffer2[0] == '\n'  ||  buffer2[0] == '\0')
             break;
     }
-    end = rindex(buffer, ' ');
+    end = strrchr(buffer, ' ');
     if (strncmp(end+1, "HTTP", 4) == 0)
         *end = '\0';
     if (strncmp(buffer, "GET ", 4) == 0)
