@@ -193,6 +193,7 @@ static void chmhttp_server(const char *filename)
             break;
 
         pthread_create(&tid, NULL, _slave, (void *)slave);
+        pthread_detach(&tid);
     }
     free(slave);
 }
