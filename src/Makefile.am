@@ -1,5 +1,6 @@
 lib_LTLIBRARIES=libchm.la
 libchm_la_SOURCES=chm_lib.c lzx.c
+libchm_la_LDFLAGS=-version-info 1
 include_HEADERS=chm_lib.h lzx.h
 
 if EXAMPLES
