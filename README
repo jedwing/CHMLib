@@ -1,4 +1,4 @@
-CHMLIB 0.38
+CHMLIB 0.40a
 ===========
 
 -------
@@ -48,12 +48,9 @@ library doesn't work with, please contact me so I can fix the library.
 PORTABILITY
 -------
 
-This software was originally developed on a Intel x86 Debian Linux machine,
-using gcc 3.0.  It has since been compiled on various flavors of RedHat as
-well, and using versions of gcc from 2.95 through 3.2.  Basic Win32 support
-should be in this release.  (While a port to Win32 may _seem_ like a funny
-idea, given that Windows ships with libraries for CHM access, it turns out that
-Win CE does not; I've gotten a request for a port to Windows CE.)
+This software is maintained on an x86-64 Debian GNU/Linux machine using gcc
+4.x.  It has been compiled on various other Linux distributions, using versions
+of gcc from 2.95 through 4.4.  Win32 support is provided.
 
 Chmlib apparently works on OS X, with some tweaks.  In particular, disabling
 pread and io64 apparently works.
@@ -117,6 +114,8 @@ CREDITS
 * Rich Erwin: Windows CE support.
 
 * Pabs: bug fixes and suggestions.
+
+* Kartik Mistry: Debian package maintainer
 
 * Antony Dovgal: setting up autoconf/automake based build process.
 
