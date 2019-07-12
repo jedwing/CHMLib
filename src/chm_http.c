@@ -50,7 +50,7 @@
 #include <getopt.h>
 
 int config_port = 8080;
-char config_bind[65536] = "0.0.0.0";
+char config_bind[65536] = "127.0.0.1";
 
 static void usage(const char *argv0)
 {
