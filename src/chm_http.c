@@ -51,13 +51,14 @@
 
 int config_port = 8080;
 char config_bind[65536] = "0.0.0.0";
+char config_quiet = 0;
 
 static void usage(const char *argv0)
 {
 #ifdef CHM_HTTP_SIMPLE
-    fprintf(stderr, "usage: %s <filename>\n", argv0);
+    fprintf(stderr, "usage: %s [--quiet] <filename>\n", argv0);
 #else
-    fprintf(stderr, "usage: %s [--port=PORT] [--bind=IP] <filename>\n", argv0);
+    fprintf(stderr, "usage: %s [--quiet] [--port=PORT] [--bind=IP] <filename>\n", argv0);
 #endif
     exit(1);
 }
@@ -80,6 +81,7 @@ int main(int c, char **v)
     {
         { "port", required_argument, 0, 'p' },
         { "bind", required_argument, 0, 'b' },
+        { "quiet", no_argument, 0, 'q' },
         { "help", no_argument, 0, 'h' },
         { 0, 0, 0, 0 }
     };
@@ -87,7 +89,7 @@ int main(int c, char **v)
     while (1) 
     {
         int o;
-        o = getopt_long (c, v, "n:b:h", longopts, &optindex);
+        o = getopt_long (c, v, "n:b:qh", longopts, &optindex);
         if (o < 0) 
         {
             break;
@@ -107,6 +109,10 @@ int main(int c, char **v)
             case 'b':
                 strncpy (config_bind, optarg, 65536);
                 config_bind[65535] = '\0';
+                break;
+
+            case 'q':
+                config_quiet = 1;
                 break;
 
             case 'h':
@@ -180,6 +186,12 @@ static void chmhttp_server(const char *filename)
         server.socket = -1;
         fprintf(stderr, "couldn't bind to ip %s port %d\n", config_bind, config_port);
         exit(3);
+    }
+
+    /* Display URL for server */
+    if (!config_quiet)
+    {
+        printf("Server running at http://%s:%d/\n", config_bind, config_port);
     }
 
     /* listen for connections */
