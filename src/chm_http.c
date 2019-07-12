@@ -87,7 +87,7 @@ int main(int c, char **v)
     while (1) 
     {
         int o;
-        o = getopt_long (c, v, "n:b:h", longopts, &optindex);
+        o = getopt_long (c, v, "p:b:h", longopts, &optindex);
         if (o < 0) 
         {
             break;
