@@ -767,7 +767,7 @@ int LZXdecompress(struct LZXstate *pState, unsigned char *inpos, unsigned char *
 int main(int c, char **v)
 {
     FILE *fin, *fout;
-    struct LZXstate state;
+    struct LZXstate *pState;
     UBYTE ibuf[16384];
     UBYTE obuf[32768];
     int ilen, olen;
@@ -775,13 +775,13 @@ int main(int c, char **v)
     int i;
     int count=0;
     int w = atoi(v[1]);
-    LZXinit(&state, w);
+    pState = LZXinit(w);
     fout = fopen(v[2], "wb");
     for (i=3; i<c; i++)
     {
         fin = fopen(v[i], "rb");
         ilen = fread(ibuf, 1, 16384, fin);
-        status = LZXdecompress(&state, ibuf, obuf, ilen, 32768);
+        status = LZXdecompress(pState, ibuf, obuf, ilen, 32768);
         switch (status)
         {
             case DECR_OK:
@@ -804,9 +804,10 @@ int main(int c, char **v)
         if (++count == 2)
         {
             count = 0;
-            LZXreset(&state);
+            LZXreset(pState);
         }
     }
     fclose(fout);
+    LZXteardown(pState);
 }
 #endif
