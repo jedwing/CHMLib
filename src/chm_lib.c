@@ -48,6 +48,8 @@
  *                                                                         *
  ***************************************************************************/
 
+#define _LARGEFILE64_SOURCE /* for pread64 */
+
 #include "chm_lib.h"
 
 #ifdef CHM_MT
